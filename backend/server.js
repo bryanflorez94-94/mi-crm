@@ -11,18 +11,17 @@ app.use(express.json());
 
 // Conexión a Supabase
 // CONFIGURACIÓN DEFINITIVA PARA RENDER (Parámetros separados + IPv4 forzado)
+// CONFIGURACIÓN FINAL (Usando el Pooler de Supabase para evitar bloqueos de Render)
 const pool = new Pool({
-  host: 'db.sckbixqqlkquwvqvmfqi.supabase.co',
-  port: 5432,
+  host: 'sckbixqqlkquwvqvmfqi.pooler.supabase.com',
+  port: 6543, // El puerto del pooler
   database: 'postgres',
   user: 'postgres',
   password: process.env.DB_PASSWORD,
   ssl: {
     rejectUnauthorized: false
-  },
-  family: 4  // <--- Esta línea es la que obliga a usar IPv4 y arregla el ENETUNREACH
+  }
 });
-
 pool.connect((err) => {
   if (err) console.error('❌ Error conectando a Supabase:', err.message);
   else console.log('✅ Conectado exitosamente a Supabase');
