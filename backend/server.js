@@ -11,8 +11,12 @@ app.use(express.json());
 
 // Conexión a Supabase
 // Conexión a Supabase usando la URL completa (¡La solución al ENETUNREACH!)
+// Conexión definitiva a Supabase (con SSL forzado para Render)
 const pool = new Pool({
   connectionString: `postgresql://postgres:${process.env.DB_PASSWORD}@db.sckbixqqlkquwvqvmfqi.supabase.co:5432/postgres`,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 pool.connect((err) => {
