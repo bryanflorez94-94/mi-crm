@@ -10,13 +10,17 @@ app.use(cors());
 app.use(express.json());
 
 // Conexión a Supabase
-// Conexión definitiva a Supabase (Forzando IPv4 para que Render no falle)
+// CONFIGURACIÓN DEFINITIVA PARA RENDER (Parámetros separados + IPv4 forzado)
 const pool = new Pool({
-  connectionString: `postgresql://postgres:${process.env.DB_PASSWORD}@db.sckbixqqlkquwvqvmfqi.supabase.co:5432/postgres`,
+  host: 'db.sckbixqqlkquwvqvmfqi.supabase.co',
+  port: 5432,
+  database: 'postgres',
+  user: 'postgres',
+  password: process.env.DB_PASSWORD,
   ssl: {
     rejectUnauthorized: false
   },
-  family: 4 // <--- ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA!
+  family: 4  // <--- Esta línea es la que obliga a usar IPv4 y arregla el ENETUNREACH
 });
 
 pool.connect((err) => {
