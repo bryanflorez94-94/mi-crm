@@ -1,0 +1,11 @@
+# Ignorar dependencias de Node
+**/node_modules/
+**/dist/
+**/build/
+
+# Ignorar archivos de entorno (contraseñas)
+**/.env
+**/.env.local
+
+# Ignorar archivos del sistema operativo
+.DS_Store
