@@ -11,15 +11,11 @@ app.use(express.json());
 
 // Conexión a Supabase
 // CONFIGURACIÓN DEFINITIVA PARA RENDER (Parámetros separados + IPv4 forzado)
-// CONFIGURACIÓN FINAL (Usando el Pooler de Supabase para evitar bloqueos de Render)
+// Conexión a la base de datos de Render (EL FINAL DE LA PESADILLA)
 const pool = new Pool({
-  host: 'sckbixqqlkquwvqvmfqi.pooler.supabase.com',
-  port: 6543, // El puerto del pooler
-  database: 'postgres',
-  user: 'postgres',
-  password: process.env.DB_PASSWORD,
+  connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false
+    rejectUnauthorized: false // Render siempre requiere SSL
   }
 });
 pool.connect((err) => {
