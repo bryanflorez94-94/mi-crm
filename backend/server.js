@@ -1,32 +1,17 @@
 const express = require('express');
 const cors = require('cors');
-app.use(cors());
-app.options('*', cors());
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+// 1. Inicializar la aplicación
 const app = express();
 
-// Configuración de CORS (¡AQUÍ ESTÁ LA CLAVE!)
-const allowedOrigins = [
-  'https://mi-crm-ten.vercel.app', // Tu página en Vercel
-  'http://localhost:5173',
-  'http://localhost:5174'
-];
-app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir peticiones sin origen (como las de Postman o herramientas locales)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+// 2. Configuración de CORS (¡Ahora app ya existe!)
+app.use(cors());
+app.options('*', cors()); // Permite peticiones de cualquier origen (Plan de emergencia infalible)
+
 app.use(express.json());
 
 // Conexión a la base de datos de Render
