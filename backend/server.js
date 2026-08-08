@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+app.use(cors());
+app.options('*', cors());
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
