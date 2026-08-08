@@ -10,12 +10,9 @@ app.use(cors());
 app.use(express.json());
 
 // Conexión a Supabase
+// Conexión a Supabase usando la URL completa (¡La solución al ENETUNREACH!)
 const pool = new Pool({
-  host: 'db.sckbixqqlkquwvqvmfqi.supabase.co',
-  port: 5432,
-  database: 'postgres',
-  user: 'postgres',
-  password: process.env.DB_PASSWORD,
+  connectionString: `postgresql://postgres:${process.env.DB_PASSWORD}@db.sckbixqqlkquwvqvmfqi.supabase.co:5432/postgres`,
 });
 
 pool.connect((err) => {
