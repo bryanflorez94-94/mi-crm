@@ -1,0 +1,20 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": false,
+                    "requestCert": false
+                }
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "dpg-d9rllcifngtc73dm4d20-a.frankfurt-postgres.render.com",
+            "driver": "PostgreSQL",
+            "connectString": "postgresql://crm_db_q514_user:xRKvgRmEWMwohorYfgZVtK4AEmU9FhIj@dpg-d9rllcifngtc73dm4d20-a.frankfurt-postgres.render.com/crm_db_q514",
+            "name": "crm-db",
+            "database": "crm_db_q514",
+            "username": "crm_db_q514_user"
+        }
+    ]
+}
