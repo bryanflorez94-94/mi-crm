@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_URL = 'mi-crm-production-4e76.up.railway.app/api';
+const API_URL = 'https://mi-crm-production-4e76.up.railway.app/api';
 function App() {
   // ----- ESTADO DE USUARIO Y LOGIN -----
   const [user, setUser] = useState(null);
