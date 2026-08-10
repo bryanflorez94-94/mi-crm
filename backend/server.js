@@ -78,7 +78,16 @@ app.post('/api/register', authenticateToken, authorizeRole('admin'), async (req,
     res.status(500).json({ error: 'Error al crear el usuario' });
   }
 });
-
+// Ruta para obtener la lista de usuarios (¡La que faltaba!)
+app.get('/api/usuarios', authenticateToken, authorizeRole('admin'), async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, nombre, correo_electronico, telefono, rol FROM usuarios ORDER BY id ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener usuarios:', err.message);
+    res.status(500).json({ error: 'Error al obtener la lista de usuarios' });
+  }
+});
 // --- CRUD DE CLIENTES ---
 app.get('/api/clientes', authenticateToken, async (req, res) => {
   try {
@@ -132,4 +141,4 @@ app.delete('/api/clientes/:id', authenticateToken, async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Backend corriendo en el puerto ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Backend corriendo en el puerto ${PORT}`)); Casi que no después cinco dras, no paso acerca, clientes, me staras aquí a carros Karen Vegas del usuario.
