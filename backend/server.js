@@ -6,7 +6,18 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
+// Configuración CORS definitiva para Railway y Vercel
+const corsOptions = {
+  // Permitir solo estos orígenes (tu página de Vercel y tu localhost de pruebas)
+  origin: ['https://mi-crm-ten.vercel.app', 'http://localhost:5173', 'http://localhost:5174'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200 // Para navegadores antiguos o proxies
+};
 
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Esta línea fuerza a responder a las peticiones de "prueba" del navegador
 // Configuración de CORS (Permite todo para evitar bloqueos en Railway)
 app.use(cors());
 app.options('*', cors());
