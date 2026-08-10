@@ -5,16 +5,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-// 1. Inicializar la aplicación
 const app = express();
 
-// 2. Configuración de CORS (¡Ahora app ya existe!)
+// Configuración de CORS (Permite todo para evitar bloqueos en Railway)
 app.use(cors());
-app.options('*', cors()); // Permite peticiones de cualquier origen (Plan de emergencia infalible)
-
+app.options('*', cors());
 app.use(express.json());
 
-// Conexión a la base de datos de Render
+// Conexión a la base de datos (Render o Railway)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -27,7 +25,12 @@ pool.connect((err) => {
   else console.log('✅ Conectado exitosamente a la base de datos');
 });
 
-// Middleware de autenticación
+// --- RUTA DE DIAGNÓSTICO (La que estamos probando) ---
+app.get('/api/health', (req, res) => {
+  res.json({ status: '✅ Servidor CRM funcionando correctamente' });
+});
+
+// --- MIDDLEWARE DE AUTENTICACIÓN ---
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -46,7 +49,7 @@ const authorizeRole = (rolPermitido) => {
   };
 };
 
-// LOGIN
+// --- RUTA DE LOGIN ---
 app.post('/api/login', async (req, res) => {
   const { correo_electronico, password } = req.body;
   try {
@@ -54,12 +57,15 @@ app.post('/api/login', async (req, res) => {
     if (result.rows.length === 0) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
     const user = result.rows[0];
+    
+    // Comparador de contraseñas (acepta tanto texto plano como encriptado)
     let validPassword = false;
     if (user.password_hash && user.password_hash.startsWith('$2b')) {
       validPassword = await bcrypt.compare(password, user.password_hash);
     } else {
       validPassword = (password === user.password_hash);
     }
+    
     if (!validPassword) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
     const token = jwt.sign(
@@ -69,29 +75,12 @@ app.post('/api/login', async (req, res) => {
     );
     res.json({ token, user: { id: user.id, nombre: user.nombre, rol: user.rol } });
   } catch (err) {
-    console.error(err);
+    console.error('Error en login:', err.message);
     res.status(500).json({ error: 'Error en el servidor' });
   }
 });
 
-// REGISTRO
-app.post('/api/register', authenticateToken, authorizeRole('admin'), async (req, res) => {
-  const { nombre, correo_electronico, telefono, password, rol } = req.body;
-  try {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const result = await pool.query(
-      'INSERT INTO usuarios (nombre, correo_electronico, telefono, password_hash, rol) VALUES ($1, $2, $3, $4, $5) RETURNING id, nombre, correo_electronico, telefono, rol',
-      [nombre, correo_electronico, telefono, hashedPassword, rol || 'vendedor']
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al crear el usuario' });
-  }
-});
-
-// RUTAS DE CLIENTES
+// --- RUTAS DE CLIENTES ---
 app.get('/api/clientes', authenticateToken, async (req, res) => {
   try {
     let query = 'SELECT * FROM clientes ORDER BY id DESC';
@@ -151,5 +140,6 @@ app.delete('/api/clientes/:id', authenticateToken, async (req, res) => {
   }
 });
 
-const PORT = 5000;
-app.listen(PORT, () => console.log(`🚀 Backend corriendo en http://localhost:${PORT}`));
+// --- PUERTO DINÁMICO PARA RAILWAY ---
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Backend corriendo en el puerto ${PORT}`));
