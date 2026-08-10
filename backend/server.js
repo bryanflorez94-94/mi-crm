@@ -7,7 +7,7 @@ require('dotenv').config();
 
 const app = express();
 
-// --- CORS ABSOLUTAMENTE PERMISIVO PARA RAILWAY (El que funciona) ---
+// --- CORS ABSOLUTAMENTE PERMISIVO PARA RAILWAY ---
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
@@ -85,7 +85,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// REGISTRO (Solo Admin)
+// REGISTRO
 app.post('/api/register', authenticateToken, authorizeRole('admin'), async (req, res) => {
   const { nombre, correo_electronico, telefono, password, rol } = req.body;
   try {
@@ -162,6 +162,6 @@ app.delete('/api/clientes/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// PUERTO DE RAILWAY (0.0.0.0)
+// PUERTO DE RAILWAY
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Backend corriendo en el puerto ${PORT}`));
