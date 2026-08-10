@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
-// CORS permisivo absoluto para desarrollo y pruebas (Reemplaza todo lo anterior de corsOptions)
+
+// --- CORS ABSOLUTAMENTE PERMISIVO PARA RAILWAY (El que funciona) ---
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
@@ -18,15 +19,8 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-// ... el resto del código
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Esta línea fuerza a responder a las peticiones de "prueba" del navegador
-// Configuración de CORS (Permite todo para evitar bloqueos en Railway)
-app.use(cors());
-app.options('*', cors());
-app.use(express.json());
 
-// Conexión a la base de datos (Render o Railway)
+// Conexión a la base de datos
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -39,12 +33,12 @@ pool.connect((err) => {
   else console.log('✅ Conectado exitosamente a la base de datos');
 });
 
-// --- RUTA DE DIAGNÓSTICO (La que estamos probando) ---
+// RUTA DE DIAGNÓSTICO
 app.get('/api/health', (req, res) => {
   res.json({ status: '✅ Servidor CRM funcionando correctamente' });
 });
 
-// --- MIDDLEWARE DE AUTENTICACIÓN ---
+// MIDDLEWARE DE AUTENTICACIÓN
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -63,7 +57,7 @@ const authorizeRole = (rolPermitido) => {
   };
 };
 
-// --- RUTA DE LOGIN ---
+// LOGIN
 app.post('/api/login', async (req, res) => {
   const { correo_electronico, password } = req.body;
   try {
@@ -71,15 +65,12 @@ app.post('/api/login', async (req, res) => {
     if (result.rows.length === 0) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
     const user = result.rows[0];
-    
-    // Comparador de contraseñas (acepta tanto texto plano como encriptado)
     let validPassword = false;
     if (user.password_hash && user.password_hash.startsWith('$2b')) {
       validPassword = await bcrypt.compare(password, user.password_hash);
     } else {
       validPassword = (password === user.password_hash);
     }
-    
     if (!validPassword) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
     const token = jwt.sign(
@@ -94,7 +85,24 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// --- RUTAS DE CLIENTES ---
+// REGISTRO (Solo Admin)
+app.post('/api/register', authenticateToken, authorizeRole('admin'), async (req, res) => {
+  const { nombre, correo_electronico, telefono, password, rol } = req.body;
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const result = await pool.query(
+      'INSERT INTO usuarios (nombre, correo_electronico, telefono, password_hash, rol) VALUES ($1, $2, $3, $4, $5) RETURNING id, nombre, correo_electronico, telefono, rol',
+      [nombre, correo_electronico, telefono, hashedPassword, rol || 'vendedor']
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear el usuario' });
+  }
+});
+
+// RUTAS DE CLIENTES
 app.get('/api/clientes', authenticateToken, async (req, res) => {
   try {
     let query = 'SELECT * FROM clientes ORDER BY id DESC';
@@ -154,8 +162,6 @@ app.delete('/api/clientes/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// --- PUERTO DINÁMICO PARA RAILWAY ---
+// PUERTO DE RAILWAY (0.0.0.0)
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Backend corriendo en el puerto ${PORT} y escuchando en 0.0.0.0`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Backend corriendo en el puerto ${PORT}`));
