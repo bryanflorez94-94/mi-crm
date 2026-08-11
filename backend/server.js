@@ -106,6 +106,25 @@ app.delete('/api/usuarios/:id', authenticateToken, authorizeRole('admin'), async
 });
 
 // Ruta para CAMBIAR EL ROL de un trabajador (¡Solo para ADMIN!)
+// --- RUTAS PARA GESTIÓN DE TRABAJADORES (SOLO ADMIN) ---
+
+// 1. Eliminar un trabajador (y desvincularlo de sus clientes)
+app.delete('/api/usuarios/:id', authenticateToken, authorizeRole('admin'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Desvincular al trabajador de sus clientes (para no romper la base de datos)
+    await pool.query('UPDATE clientes SET asesor_id = NULL WHERE asesor_id = $1', [id]);
+    // Ahora sí, eliminar al trabajador
+    const result = await pool.query('DELETE FROM usuarios WHERE id = $1 RETURNING *', [id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Trabajador no encontrado' });
+    res.json({ message: 'Trabajador eliminado exitosamente' });
+  } catch (err) {
+    console.error('Error al eliminar trabajador:', err.message);
+    res.status(500).json({ error: 'Error al eliminar el trabajador' });
+  }
+});
+
+// 2. Cambiar el rol de un trabajador
 app.put('/api/usuarios/:id/rol', authenticateToken, authorizeRole('admin'), async (req, res) => {
   const { id } = req.params;
   const { nuevoRol } = req.body;
