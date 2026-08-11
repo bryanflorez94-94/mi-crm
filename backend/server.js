@@ -66,7 +66,7 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/register', authenticateToken, authorizeRole('admin'), async (req, res) => {
   const { nombre, correo_electronico, telefono, password, rol } = req.body;
   try {
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(10); 
     const hash = await bcrypt.hash(password, salt);
     const result = await pool.query(
       'INSERT INTO usuarios (nombre, correo_electronico, telefono, password_hash, rol) VALUES ($1, $2, $3, $4, $5) RETURNING id, nombre, correo_electronico, telefono, rol',
