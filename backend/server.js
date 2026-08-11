@@ -88,6 +88,21 @@ app.get('/api/usuarios', authenticateToken, authorizeRole('admin'), async (req, 
     res.status(500).json({ error: 'Error al obtener la lista de usuarios' });
   }
 });
+// Ruta para ELIMINAR un usuario (¡Solo para ADMIN!)
+app.delete('/api/usuarios/:id', authenticateToken, authorizeRole('admin'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Primero, desvinculamos a ese asesor de sus clientes (ponemos NULL)
+    await pool.query('UPDATE clientes SET asesor_id = NULL WHERE asesor_id = $1', [id]);
+    // Luego eliminamos al usuario
+    const result = await pool.query('DELETE FROM usuarios WHERE id = $1 RETURNING *', [id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+    res.json({ message: 'Usuario eliminado exitosamente' });
+  } catch (err) {
+    console.error('Error al eliminar usuario:', err.message);
+    res.status(500).json({ error: 'Error al eliminar el usuario' });
+  }
+});
 // --- CRUD DE CLIENTES ---
 app.get('/api/clientes', authenticateToken, async (req, res) => {
   try {
