@@ -89,18 +89,36 @@ app.get('/api/usuarios', authenticateToken, authorizeRole('admin'), async (req, 
   }
 });
 // Ruta para ELIMINAR un usuario (¡Solo para ADMIN!)
+// Ruta para ELIMINAR un trabajador (¡Solo para ADMIN!)
 app.delete('/api/usuarios/:id', authenticateToken, authorizeRole('admin'), async (req, res) => {
   const { id } = req.params;
   try {
-    // Primero, desvinculamos a ese asesor de sus clientes (ponemos NULL)
+    // Desvincular al trabajador de sus clientes
     await pool.query('UPDATE clientes SET asesor_id = NULL WHERE asesor_id = $1', [id]);
-    // Luego eliminamos al usuario
+    // Eliminar al trabajador
     const result = await pool.query('DELETE FROM usuarios WHERE id = $1 RETURNING *', [id]);
-    if (result.rowCount === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
-    res.json({ message: 'Usuario eliminado exitosamente' });
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Trabajador no encontrado' });
+    res.json({ message: 'Trabajador eliminado exitosamente' });
   } catch (err) {
-    console.error('Error al eliminar usuario:', err.message);
-    res.status(500).json({ error: 'Error al eliminar el usuario' });
+    console.error('Error al eliminar trabajador:', err.message);
+    res.status(500).json({ error: 'Error al eliminar el trabajador' });
+  }
+});
+
+// Ruta para CAMBIAR EL ROL de un trabajador (¡Solo para ADMIN!)
+app.put('/api/usuarios/:id/rol', authenticateToken, authorizeRole('admin'), async (req, res) => {
+  const { id } = req.params;
+  const { nuevoRol } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE usuarios SET rol = $1 WHERE id = $2 RETURNING id, nombre, correo_electronico, telefono, rol',
+      [nuevoRol, id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Trabajador no encontrado' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error al cambiar rol:', err.message);
+    res.status(500).json({ error: 'Error al cambiar el rol del trabajador' });
   }
 });
 // --- CRUD DE CLIENTES ---
