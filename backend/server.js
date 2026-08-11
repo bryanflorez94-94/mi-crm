@@ -8,9 +8,26 @@ require('dotenv').config();
 const app = express();
 
 // CORS simple y efectivo
-app.use(cors({ origin: '*' }));
+// Configuración CORS definitiva para dominios de Vercel y Railway
+const allowedOrigins = [
+  'https://mi-crm-ten.vercel.app',
+  'https://mi-crm-production-ddfc.up.railway.app',
+  'http://localhost:5173',
+  'http://localhost:5174'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permitir peticiones sin origen (como Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
 app.options('*', cors());
-app.use(express.json());
 
 // Conexión a la base de datos
 const pool = new Pool({
